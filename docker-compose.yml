@@ -1,0 +1,181 @@
+version: "2"
+services:
+  rabbitmq:
+    container_name: games-rabbitmq
+    image: rabbitmq:3.7-management
+    ports:
+      - "15673:15672"
+    restart: always
+
+  playerdb:
+    container_name: games-playerdb
+    image: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: "player"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "postgres"
+    restart: always
+    volumes:
+      - player-volume:/var/lib/postgresql/data
+
+  matchdb:
+    container_name: games-matchdb
+    image: postgres
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: "match"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "postgres"
+    restart: always
+    volumes:
+      - match-volume:/var/lib/postgresql/data
+
+  ticketdb:
+    container_name: games-ticketdb
+    image: postgres
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: "ticket"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "postgres"
+    restart: always
+    volumes:
+      - ticket-volume:/var/lib/postgresql/data
+
+  chat:
+    container_name: games-chat
+    image: capaths/gameschat
+    build: ./src/chat
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+
+  match:
+    container_name: games-match
+    image: capaths/gamesmatch
+    build: ./src/match
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+      - "matchdb:postgres"
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+      DB_PASSWORD: "password"
+      DB_USER: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "match"
+
+  player:
+    container_name: games-player
+    image: capaths/gamesplayer
+    build: ./src/player
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+      - "playerdb:postgres"
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+      DB_PASSWORD: "password"
+      DB_USER: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "player"
+
+  access:
+    container_name: games-access
+    image: capaths/gamesaccess
+    build: ./src/access
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+      - player
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+
+  ticket:
+    container_name: games-ticket
+    image: capaths/gamesticket
+    build: ./src/ticket
+    restart: always
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+      - "ticketdb:postgres"
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+      DB_PASSWORD: "password"
+      DB_USER: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "ticket"
+
+  gateway:
+    container_name: games-gateway
+    image: capaths/gamesgateway
+    build: ./src/gateway
+    restart: "no"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+    links:
+      - "rabbitmq:games-rabbitmq"
+    environment:
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbitmq"
+      RABBIT_PORT: "5672"
+      RABBIT_MANAGEMENT_PORT: "15672"
+
+  webapp:
+    container_name: games-webapp
+    image: capaths/gameswebapp
+    build: ./src/webapp
+    restart: always
+    ports:
+      - "8080:8080"
+    links:
+      - "gateway"
+    environment:
+      ENV: "prod"
+
+volumes:
+  player-volume:
+  match-volume:
+  ticket-volume:

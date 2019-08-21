@@ -49,7 +49,6 @@ services:
   chat:
     container_name: games-chat
     image: capaths/gameschat
-    build: ./src/chat
     restart: always
     depends_on:
       - rabbitmq
@@ -65,7 +64,6 @@ services:
   match:
     container_name: games-match
     image: capaths/gamesmatch
-    build: ./src/match
     restart: always
     depends_on:
       - rabbitmq
@@ -87,7 +85,6 @@ services:
   player:
     container_name: games-player
     image: capaths/gamesplayer
-    build: ./src/player
     restart: always
     depends_on:
       - rabbitmq
@@ -109,7 +106,6 @@ services:
   access:
     container_name: games-access
     image: capaths/gamesaccess
-    build: ./src/access
     restart: always
     depends_on:
       - rabbitmq
@@ -126,7 +122,6 @@ services:
   ticket:
     container_name: games-ticket
     image: capaths/gamesticket
-    build: ./src/ticket
     restart: always
     depends_on:
       - rabbitmq

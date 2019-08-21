@@ -1,13 +1,13 @@
 """ Gateway """
-from __future__ import absolute_import
-
-from nameko.rpc import RpcProxy, rpc
+from nameko.rpc import RpcProxy
 from nameko.web.handlers import http
 from nameko.exceptions import BadRequest, RemoteError
 from nameko.extensions import DependencyProvider
 
 from nameko.web.websocket import WebSocketHubProvider
 from nameko.web.websocket import rpc as srpc
+
+from marshmallow import ValidationError
 
 from gateway.schemas import LoginSchema
 
@@ -52,7 +52,9 @@ class GatewayService:
         try:
             login_data = schema.loads(request.get_data(as_text=True)).data
         except ValueError as exc:
-            raise BadRequest("Invalid json: {}".format(exc))
+            return 400, f"Not valid JSON: {exc}"
+        except ValidationError as exc:
+            return 400, f"Not valid arguments: {exc}"
 
         username = login_data["username"]
         password = login_data["password"]

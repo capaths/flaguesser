@@ -6,6 +6,9 @@ language: python
 python:
   - "3.6"
 
+script:
+  - echo "No tests yet"
+
 after_success:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker-compose build

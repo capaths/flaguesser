@@ -111,6 +111,7 @@ services:
     restart: always
     depends_on:
       - rabbitmq
+      - player
     links:
       - "rabbitmq:games-rabbitmq"
       - player
@@ -127,6 +128,7 @@ services:
     restart: always
     depends_on:
       - rabbitmq
+      - ticketdb
     links:
       - "rabbitmq:games-rabbitmq"
       - "ticketdb:postgres"

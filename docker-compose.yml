@@ -85,7 +85,7 @@ services:
 
   player:
     container_name: games-player
-    image: capaths/gamesplayer
+    image: 161905/gamesplayer
     restart: always
     depends_on:
       - rabbitmq

@@ -69,13 +69,14 @@ def test_sockets():
 
     assert json.loads(ws.recv())["success"]
 
+
 def test_chat():
     # connect
     ws_a = create_connection(f'ws://localhost:8000/ws')
     ws_b = create_connection(f'ws://localhost:8000/ws')
 
-    ws_a.settimeout(0.5)
-    ws_b.settimeout(0.5)
+    ws_a.settimeout(1)
+    ws_b.settimeout(1)
 
     ws_a.recv()
     ws_b.recv()

@@ -24,6 +24,7 @@ def test_signup():
         }
 
         req = requests.post(url, json=payload)
+        print(req.content)
         data = json.loads(req.content)
 
         assert req.status_code == 200

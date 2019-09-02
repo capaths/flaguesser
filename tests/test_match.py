@@ -70,9 +70,9 @@ def test_challenge():
     ws_b = create_connection(WS_URL)
     ws_c = create_connection(WS_URL)
 
-    ws_a.settimeout(0.5)
-    ws_b.settimeout(0.5)
-    ws_c.settimeout(0.5)
+    ws_a.settimeout(1)
+    ws_b.settimeout(1)
+    ws_c.settimeout(1)
 
     ws_a.recv()
     ws_b.recv()

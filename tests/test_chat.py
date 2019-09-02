@@ -13,6 +13,7 @@ PASS = lambda x: f"secret{x}"
 
 TEST_MESSAGE = "Hello, World!"
 
+
 class SocketConnection:
     seen_messages = list()
     unseen_messages = list()
@@ -24,12 +25,19 @@ class SocketConnection:
     def update_message_list(self):
         try:
             while True:
-                self.unseen_messages.append(self.ws.recv())
+                self.unseen_messages.insert(0, self.ws.recv())
         except WebSocketTimeoutException:
             return
 
-    def recv(self, type):
-        pass
+    def recv(self, s_type=None):
+        new_messages = list()
+        for message in self.unseen_messages:
+            if s_type is not None:
+                if message["type"] == s_type:
+                    new_messages.append(self.unseen_messages.pop(0))
+            else:
+                new_messages.append(self.unseen_messages.pop(0))
+
 
 
 

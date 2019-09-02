@@ -13,6 +13,7 @@ before_install:
 
 script:
   - pip install -r requirements.txt
+  - pytest tests/test.py
   - pytest tests/test_match.py
   - pytest tests/test_chat.py
 

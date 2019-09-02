@@ -189,7 +189,7 @@ def test_challenge():
         }
     }))
 
-    # disconnect one
+    # disconnect
     ws_a.close()
     ws_b.close()
     ws_c.close()

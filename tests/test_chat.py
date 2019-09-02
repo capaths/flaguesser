@@ -39,9 +39,6 @@ class SocketConnection:
                 new_messages.append(self.unseen_messages.pop(0))
 
 
-
-
-
 def test_sockets():
     # connect
     ws = create_connection(f'ws://localhost:8000/ws')

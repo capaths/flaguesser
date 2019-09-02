@@ -38,12 +38,9 @@
         },
         mounted() {
             this.$options.sockets.onmessage = (message) => {
-                console.log(message.data);
-                if (message.data.type === 'event')
-                {
+                if (message.data.type === 'event') {
                     console.log(message.data.event);
-                    if (message.data.event === 'new_message')
-                    {
+                    if (message.data.event === 'new_message') {
                         this.msgs.push(message.data.data);
                     }
                 }
@@ -53,14 +50,16 @@
                     method: 'subscribe_chat',
                     data: {},
                 });
-            }
+            };
         },
         computed: {
             ...mapState('account', ['user']),
         },
         methods: {
             sendMessage() {
-                if (this.message === '') return;
+                if (this.message === '') {
+                    return;
+                }
                 this.$socket.sendObj({
                     method: 'process_message',
                     data: {

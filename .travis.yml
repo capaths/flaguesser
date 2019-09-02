@@ -6,10 +6,16 @@ language: python
 python:
   - "3.6"
 
+before_install:
+  - docker-compose build
+  - docker-compose up -d
+  - docker ps -a
+
 script:
-  - echo "No tests yet"
+  - pip install -r requirements.txt
+  - pytest tests/test_match.py
+  - pytest tests/test_chat.py
 
 after_success:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker-compose build
   - docker-compose push gateway webapp

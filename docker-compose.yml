@@ -67,6 +67,7 @@ services:
     restart: always
     depends_on:
       - rabbitmq
+      - matchdb
     links:
       - "rabbitmq:games-rabbitmq"
       - "matchdb:postgres"
@@ -88,6 +89,7 @@ services:
     restart: always
     depends_on:
       - rabbitmq
+      - playerdb
     links:
       - "rabbitmq:games-rabbitmq"
       - "playerdb:postgres"
@@ -165,8 +167,6 @@ services:
     restart: always
     ports:
       - "8080:8080"
-    links:
-      - "gateway"
     environment:
       ENV: "prod"
 

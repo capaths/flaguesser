@@ -118,6 +118,8 @@
                     .catch((e: any) => {
                         this.waiting = false;
                         this.showError('Error desconocido');
+                        console.log(e.response.data);
+                        console.log(e.response.status);
                     });
             },
             toggleSignUp() {

@@ -8,7 +8,7 @@ function login(username, password) {
 
     return axios({
         method: "post",
-        url: "/login",
+        url: "http://localhost:8000/login",
         data: payload,
     });
 }
@@ -22,7 +22,7 @@ function signup(username, password, country) {
 
     return axios({
         method: "post",
-        url: "/signup",
+        url: "http://localhost:8000/signup",
         data: payload,
     });
 }
@@ -34,7 +34,7 @@ function logout() {
 
     return axios({
         method: "post",
-        url: "/logout",
+        url: "http://localhost:8000/logout",
         data: payload,
     });
 }

@@ -35,6 +35,7 @@ def test_identification():
     # get online users with one identified user
     req = requests.get("http://localhost:8000/online_users")
     assert len(req.json()) == 1
+    assert req.json()[0] == USER('A')
 
     # identify two sockets more
     ws_b.send(json.dumps({

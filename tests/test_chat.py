@@ -74,6 +74,7 @@ def test_chat():
 
     ws_a.send(json.dumps(payload))
     ws_b.send(json.dumps(payload))
+
     result_a = json.loads(ws_a.recv())
     result_b = json.loads(ws_b.recv())
     assert result_a["success"]
@@ -91,7 +92,9 @@ def test_chat():
     ws_a.recv()
     ws_b.recv()
 
-    result_a = json.loads(ws_a.recv())["data"]
+    data_a = json.loads(ws_a.recv())
+    print(data_a)
+    result_a = data_a["data"]
     result_b = json.loads(ws_b.recv())["data"]
 
     assert result_a["sender"] == USER("A")

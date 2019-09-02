@@ -180,6 +180,15 @@ def test_challenge():
     assert json.loads(ws_a.recv())["data"]["right"]
     assert json.loads(ws_b.recv())["data"]["right"]
 
+    # send end signal
+    ws_a.send(json.dumps({
+        'method': 'end_match',
+        'data': {
+            'code': code,
+            'guess': flags[0]["name"]
+        }
+    }))
+
     # disconnect one
     ws_a.close()
     ws_b.close()

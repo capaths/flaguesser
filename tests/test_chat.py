@@ -92,9 +92,7 @@ def test_chat():
     ws_a.recv()
     ws_b.recv()
 
-    data_a = json.loads(ws_a.recv())
-    print(data_a)
-    result_a = data_a["data"]
+    result_a = json.loads(ws_a.recv())["data"]
     result_b = json.loads(ws_b.recv())["data"]
 
     assert result_a["sender"] == USER("A")
@@ -113,8 +111,11 @@ def test_chat():
             'room_name': ROOM("A")
         }
     }
+
     ws_a.send(json.dumps(payload))
-    data = json.loads(ws_a.recv())["data"]
+    data_a = ws_a.recv()
+    print(data_a)
+    data = json.loads(data_a)["data"]
     assert data["room"]["name"] == ROOM("A")
     code_a = data["room"]["code"]
 

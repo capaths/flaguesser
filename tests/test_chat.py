@@ -13,6 +13,26 @@ PASS = lambda x: f"secret{x}"
 
 TEST_MESSAGE = "Hello, World!"
 
+class SocketConnection:
+    seen_messages = list()
+    unseen_messages = list()
+
+    def __init__(self, url):
+        self.ws = create_connection(url)
+        self.ws.settimeout(0.1)
+
+    def update_message_list(self):
+        try:
+            while True:
+                self.unseen_messages.append(self.ws.recv())
+        except WebSocketTimeoutException:
+            return
+
+    def recv(self, type):
+        pass
+
+
+
 
 def test_sockets():
     # connect

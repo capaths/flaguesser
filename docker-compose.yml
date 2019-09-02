@@ -127,17 +127,10 @@ services:
     image: capaths/gamesticket
     restart: always
     depends_on:
-      - rabbitmq
       - ticketdb
     links:
-      - "rabbitmq:games-rabbitmq"
       - "ticketdb:postgres"
     environment:
-      RABBIT_PASSWORD: "guest"
-      RABBIT_USER: "guest"
-      RABBIT_HOST: "rabbitmq"
-      RABBIT_PORT: "5672"
-      RABBIT_MANAGEMENT_PORT: "15672"
       DB_PASSWORD: "password"
       DB_USER: "postgres"
       DB_HOST: "postgres"
@@ -152,7 +145,11 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - rabbitmq
+      - player
+      - match
+      - ticket
+      - chat
+      - access
     links:
       - "rabbitmq:games-rabbitmq"
     environment:
@@ -167,6 +164,8 @@ services:
     image: capaths/gameswebapp
     build: ./src/webapp
     restart: always
+    depends_on:
+      - gateway
     ports:
       - "8080:8080"
     environment:

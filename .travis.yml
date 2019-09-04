@@ -19,6 +19,7 @@ script:
 
 after_failure:
   - docker ps -a
+  - docker-compose logs access
 
 after_success:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

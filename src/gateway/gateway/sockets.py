@@ -6,10 +6,10 @@ class UserSocket:
     sockets_user = dict()
 
     def get_user_socket(self, username):
-        return self.users_socket[username]
+        return self.users_socket.get(username)
 
     def get_socket_user(self, socket_id):
-        return self.sockets_user[socket_id]
+        return self.sockets_user.get(socket_id)
 
     def clean(self, username, socket_id):
         old_socket_id = self.users_socket.get(username)

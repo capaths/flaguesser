@@ -1,11 +1,7 @@
 import json
 
-import pytest
-import requests
-import time
-
-from nameko.testing.services import worker_factory
 from websocket import create_connection, WebSocketTimeoutException
+from .utils.socket_connection import SocketConnection
 
 USER = lambda x: f"TestUser{x}"
 ROOM = lambda x: f"Room{x}"
@@ -14,112 +10,39 @@ PASS = lambda x: f"secret{x}"
 TEST_MESSAGE = "Hello, World!"
 
 
-class SocketConnection:
-    seen_messages = list()
-    unseen_messages = list()
-
-    def __init__(self, url):
-        self.ws = create_connection(url)
-        self.ws.settimeout(0.1)
-
-    def update_message_list(self):
-        try:
-            while True:
-                self.unseen_messages.insert(0, self.ws.recv())
-        except WebSocketTimeoutException:
-            return
-
-    def recv(self, s_type=None):
-        new_messages = list()
-        for message in self.unseen_messages:
-            if s_type is not None:
-                if message["type"] == s_type:
-                    new_messages.append(self.unseen_messages.pop(0))
-            else:
-                new_messages.append(self.unseen_messages.pop(0))
-
-
 def test_sockets():
     # connect
-    ws = create_connection(f'ws://localhost:8000/ws')
-    assert json.loads(ws.recv())["event"] == "connected"
+    ws = SocketConnection(f'ws://localhost:8000/ws')
 
     # try to access method without identification
-    ws.send(json.dumps({
-        'method': 'subscribe_chat'
-    }))
-
-    assert not json.loads(ws.recv())["success"]
+    assert not ws.send("subscribe_chat")["success"]
 
     # identify
-    ws.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('A')
-        }
-    }))
+    assert ws.send('identify', {'username': USER('A')})["success"]
 
     # access same method as before
-    ws.send(json.dumps({
-        'method': 'subscribe_chat'
-    }))
-
-    assert json.loads(ws.recv())["success"]
+    assert ws.send("subscribe_chat")["success"]
 
 
 def test_chat():
     # connect
-    ws_a = create_connection(f'ws://localhost:8000/ws')
-    ws_b = create_connection(f'ws://localhost:8000/ws')
-
-    ws_a.settimeout(1)
-    ws_b.settimeout(1)
-
-    ws_a.recv()
-    ws_b.recv()
+    ws_a = SocketConnection(f'ws://localhost:8000/ws')
+    ws_b = SocketConnection(f'ws://localhost:8000/ws')
 
     # identify
-    ws_a.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('A')
-        }
-    }))
-
-    ws_b.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('B')
-        }
-    }))
+    assert ws_a.send('identify', {'username': USER('A')})
+    assert ws_b.send('identify', {'username': USER('B')})
 
     # subscribe to chat
-    payload = {
-        'method': 'subscribe_chat'
-    }
-
-    ws_a.send(json.dumps(payload))
-    ws_b.send(json.dumps(payload))
-
-    result_a = json.loads(ws_a.recv())
-    result_b = json.loads(ws_b.recv())
-    assert result_a["success"]
-    assert result_b["success"]
+    assert ws_a.send("subscribe_chat")["success"]
+    assert ws_b.send("subscribe_chat")["success"]
 
     # send global message
-    payload = {
-        'method': 'process_message',
-        'data': {
-            'content': TEST_MESSAGE
-        }
-    }
 
-    ws_a.send(json.dumps(payload))
-    ws_a.recv()
-    ws_b.recv()
+    assert ws_a.send('process_message', {'content': TEST_MESSAGE})
 
-    result_a = json.loads(ws_a.recv())["data"]
-    result_b = json.loads(ws_b.recv())["data"]
+    result_a = ws_a.recv("event")[0]["data"]
+    result_b = ws_b.recv("event")[0]["data"]
 
     assert result_a["sender"] == USER("A")
     assert result_b["sender"] == USER("A")
@@ -127,90 +50,55 @@ def test_chat():
     assert result_a["content"] == TEST_MESSAGE
     assert result_b["content"] == TEST_MESSAGE
 
-    ws_a.recv()
-
     # create chat room
-    payload = {
-        'method': 'create_room',
-        'data': {
+    assert ws_a.send("create_room", {
             'sender': USER("A"),
             'room_name': ROOM("A")
-        }
-    }
+    })["success"]
 
-    ws_a.send(json.dumps(payload))
-    data_a = ws_a.recv()
-    print(data_a)
-    data = json.loads(data_a)["data"]
+    data = ws_a.recv("event")[0]["data"]
     assert data["room"]["name"] == ROOM("A")
     code_a = data["room"]["code"]
 
-    ws_a.recv()
-
     # subscribe chat room
-    payload = {
-        'method': 'subscribe_room',
-        'data': {
+    assert ws_a.send("subscribe_room", {
             'room_code': code_a
-        }
-    }
-    ws_a.send(json.dumps(payload))
-    data = json.loads(ws_a.recv())
-    assert data["success"]
+    })["success"]
 
     # send message in chat room
-    payload = {
-        'method': 'process_message',
-        'data': {
+    assert ws_a.send("process_message", {
             'content': TEST_MESSAGE,
             'room_code': code_a
-        }
-    }
-    ws_a.send(json.dumps(payload))
+    })["success"]
 
-    data = json.loads(ws_a.recv())
-
-    assert data["data"]["sender"] == USER('A')
-    assert data["data"]["content"] == TEST_MESSAGE
+    data = ws_a.recv("event")[0]["data"]
+    assert data["sender"] == USER('A')
+    assert data["content"] == TEST_MESSAGE
 
     # user outside room shouldn't receive message
-
-    try:
-        ws_b.recv()
-        assert False
-    except WebSocketTimeoutException:
-        assert True
+    assert len(ws_a.recv("event")) == 0
 
     # subscribe other user to room
-    payload = {
-        'method': 'subscribe_room',
-        'data': {
+    assert ws_b.send("subscribe_room", {
             'room_code': code_a
-        }
-    }
-    ws_b.send(json.dumps(payload))
-    data = json.loads(ws_b.recv())
-    assert data["success"]
+    })["success"]
 
     # send message in chat room
-    payload = {
-        'method': 'process_message',
-        'data': {
+    assert ws_a.send('process_message', {
             'content': TEST_MESSAGE,
             'room_code': code_a
-        }
-    }
-    ws_a.send(json.dumps(payload))
-    ws_a.recv()
+    })["success"]
 
-    data_a = json.loads(ws_a.recv())
-    data_b = json.loads(ws_b.recv())
+    # all users in room receive message
+    data_a = ws_a.recv("event")[0]["data"]
+    data_b = ws_b.recv("event")[0]["data"]
 
-    assert data_a["data"]["sender"] == USER('A')
-    assert data_a["data"]["content"] == TEST_MESSAGE
+    assert data_a["sender"] == USER('A')
+    assert data_a["content"] == TEST_MESSAGE
 
-    assert data_b["data"]["sender"] == USER('A')
-    assert data_b["data"]["content"] == TEST_MESSAGE
+    assert data_b["sender"] == USER('A')
+    assert data_b["content"] == TEST_MESSAGE
 
+    # close connection
     ws_a.close()
     ws_b.close()

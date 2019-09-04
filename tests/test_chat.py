@@ -1,6 +1,3 @@
-import json
-
-from websocket import create_connection, WebSocketTimeoutException
 from .utils.socket_connection import SocketConnection
 
 USER = lambda x: f"TestUser{x}"
@@ -38,7 +35,6 @@ def test_chat():
     assert ws_b.send("subscribe_chat")["success"]
 
     # send global message
-
     assert ws_a.send('process_message', {'content': TEST_MESSAGE})
 
     result_a = ws_a.recv("event")[0]["data"]

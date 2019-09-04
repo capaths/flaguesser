@@ -124,7 +124,7 @@ services:
 
   ticket:
     container_name: games-ticket
-    image: capaths/gamesticket
+    image: 161905/gamesticket
     restart: always
     depends_on:
       - ticketdb

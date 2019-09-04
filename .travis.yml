@@ -17,6 +17,9 @@ script:
   - pytest tests/test_match.py
   - pytest tests/test_chat.py
 
+after_failure:
+  - docker ps -a
+
 after_success:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker-compose push gateway webapp

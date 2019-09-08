@@ -120,6 +120,7 @@ class SocketMatches:
 class WebSocketHubProviderExt(WebSocketHubProvider):
     user_socket = UserSocket()
     socket_matches = SocketMatches()
+    registered_rooms = list()
 
     def get_dependency(self, worker_ctx):
         hub = super(WebSocketHubProviderExt, self).get_dependency(worker_ctx)
@@ -140,11 +141,26 @@ class WebSocketHubProviderExt(WebSocketHubProvider):
         def get_active_users():
             return list(self.user_socket.users_socket.keys())
 
+        def register_room(room_code):
+            self.registered_rooms.append(room_code)
+
+        def subscribe_room(socket_id, room_code):
+            if is_valid_room(room_code):
+                hub.subscribe(socket_id, f"chat;{room_code}")
+            else:
+                raise ValueError("Not valid room code")
+
+        def is_valid_room(room_code):
+            return room_code in self.registered_rooms
+
         hub.identify_socket = identify_socket
         hub.get_username = get_username
         hub.get_socket_id = get_socket_id
         hub.get_active_users = get_active_users
         hub.is_identified = is_identified
+        hub.subscribe_room = subscribe_room
+        hub.is_valid_room = is_valid_room
+        hub.register_room = register_room
 
         # matches
         def get_match(socket_id):

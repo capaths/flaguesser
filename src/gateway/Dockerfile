@@ -8,10 +8,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY config.yaml ./
-COPY run.sh ./
 
 COPY gateway/ ./gateway/
 
-RUN chmod +x ./run.sh
-
-CMD ["./run.sh"]
+CMD ["nameko", "run", "--config", "config.yaml", "gateway.service"]

@@ -91,19 +91,28 @@ class GatewayService:
         else:
             return 500, "User already exists"
 
+    def try_socket_id(self, socket_id, username):
+        if self.hub.is_identified(socket_id):
+            return
+        if username is not None:
+            self.hub.identify_socket(socket_id, username)
+            if not self.hub.is_identified(socket_id):
+                raise PermissionError("Couldn't identify socket")
+            return
+        raise PermissionError("Not identified connection")
+
     @srpc
     def identify(self, socket_id, username):
-        self.hub.identify_socket(socket_id, username)
+        self.try_socket_id(socket_id, username)
 
     @srpc
-    def subscribe_chat(self, socket_id):
-        if not self.hub.is_identified(socket_id):
-            raise PermissionError("Not identified connection")
-        else:
-            self.hub.subscribe(socket_id, 'chat')
+    def subscribe_chat(self, socket_id, username=None):
+        self.try_socket_id(socket_id, username)
+        self.hub.subscribe(socket_id, 'chat')
 
     @srpc
-    def subscribe_challenge(self, socket_id):
+    def subscribe_challenge(self, socket_id, username=None):
+        self.try_socket_id(socket_id, username)
         if not self.hub.is_identified(socket_id):
             self.hub.subscribe(socket_id, 'challenge')
             return True
@@ -111,23 +120,29 @@ class GatewayService:
 
     # Chat
     @srpc
-    def create_room(self, socket_id, sender, room_name):
+    def create_room(self, socket_id, sender, room_name, username=None):
+        self.try_socket_id(socket_id, username)
         room_code = self.chat_rpc.create_room(room_name, sender)
         if room_code is None:
             raise ValueError(f"Player {sender} does not exist")
 
-        self.hub.unicast(socket_id, 'room_data', json.loads(room_code))
+        room = json.loads(room_code)
+        self.hub.register_room(room["room"]["code"])
+        self.hub.unicast(socket_id, 'room_data', room)
 
     @srpc
-    def subscribe_room(self, socket_id, room_code):
-        self.hub.subscribe(socket_id, room_code)
+    def subscribe_room(self, socket_id, room_code, username=None):
+        self.try_socket_id(socket_id, username)
+        self.hub.subscribe_room(socket_id, room_code)
 
     @srpc
-    def unsubscribe_room(self, socket_id, room_code):
+    def unsubscribe_room(self, socket_id, room_code, username=None):
+        self.try_socket_id(socket_id, username)
         self.hub.unsubscribe(socket_id, room_code)
 
     @srpc
-    def process_message(self, socket_id, content, room_code=None):
+    def process_message(self, socket_id, content, room_code=None, username=None):
+        self.try_socket_id(socket_id, username)
         username = self.hub.get_username(socket_id)
         if username is None:
             raise PermissionError("Not identified connection")
@@ -135,7 +150,10 @@ class GatewayService:
         if not self.chat_rpc.validate_message(username, content):
             raise ValueError("Not valid message")
 
-        channel = 'chat' if room_code is None else room_code
+        if room_code is not None and not self.hub.is_valid_room(room_code):
+            raise ValueError("Not a valid room")
+
+        channel = 'chat' if room_code is None else f"chat;{room_code}"
 
         self.hub.broadcast(channel, 'new_message', {
             "sender": username,
@@ -148,7 +166,8 @@ class GatewayService:
         return json.dumps(self.hub.get_active_users())
 
     @srpc
-    def challenge(self, socket_id, challenged):
+    def challenge(self, socket_id, challenged, username=None):
+        self.try_socket_id(socket_id, username)
         username = self.hub.get_username(socket_id)
         if username is None:
             raise PermissionError("Not identified connection")
@@ -162,7 +181,9 @@ class GatewayService:
         })
 
     @srpc
-    def accept_challenge(self, socket_id: str, challenger: str, start_time: float, code: str):
+    def accept_challenge(self, socket_id: str, challenger: str, start_time: float, code: str, username=None):
+        self.try_socket_id(socket_id, username)
+
         challenged = self.hub.get_username(socket_id)
         if challenged is None:
             raise PermissionError("Not identified connection")
@@ -189,7 +210,9 @@ class GatewayService:
         })
 
     @srpc
-    def guess_flag(self, socket_id, guess):
+    def guess_flag(self, socket_id, guess, username=None):
+        self.try_socket_id(socket_id, username)
+
         match = self.hub.get_match(socket_id)
         code = match["code"]
 

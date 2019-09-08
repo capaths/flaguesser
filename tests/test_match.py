@@ -1,5 +1,3 @@
-import requests
-
 from .utils import COUNTRIES
 from .utils.socket_connection import SocketConnection
 
@@ -11,41 +9,6 @@ PASS = lambda x: f"secret{x}"
 TEST_MESSAGE = "Hello, World!"
 
 WS_URL = f'ws://localhost:8000/ws'
-
-
-def test_identification():
-    ws_a = SocketConnection(WS_URL)
-    ws_b = SocketConnection(WS_URL)
-    ws_c = SocketConnection(WS_URL)
-
-    # get online users without identified users
-    req = requests.get("http://localhost:8000/online_users")
-    assert len(req.json()) == 0
-
-    # identify one socket
-    assert ws_a.send('identify', {'username': USER('A')})["success"]
-
-    # get online users with one identified user
-    req = requests.get("http://localhost:8000/online_users")
-    assert len(req.json()) == 1
-    assert req.json()[0] == USER('A')
-
-    # identify two sockets more
-    assert ws_b.send('identify', {'username': USER('B')})["success"]
-    assert ws_c.send('identify', {'username': USER('C')})["success"]
-
-    # get online users with three identified users
-    req = requests.get("http://localhost:8000/online_users")
-    assert len(req.json()) == 3
-
-    # disconnect one
-    ws_c.close()
-
-    req = requests.get("http://localhost:8000/online_users")
-    assert len(req.json()) == 2
-
-    ws_a.close()
-    ws_b.close()
 
 
 def test_challenge():

@@ -1,6 +1,9 @@
+
 """ Gateway """
 import json
+import time
 
+from nameko.timer import timer
 from nameko.rpc import RpcProxy
 from nameko.web.handlers import http
 from nameko.exceptions import BadRequest
@@ -37,13 +40,6 @@ class GatewayService:
     config = Config()
 
     container_id = ContainerIdentifier()
-
-    def set_in_socket(self, socket_id, item, value):
-        self.hub._get_connection(socket_id).context_data[item] = value
-
-    def get_from_socket(self, socket_id, item):
-        data = self.hub._get_connection(socket_id).context_data
-        return data.get(item)
 
     auth = RpcProxy('access')
 
@@ -114,11 +110,9 @@ class GatewayService:
         return False
 
     # Chat
-
     @srpc
     def create_room(self, socket_id, sender, room_name):
         room_code = self.chat_rpc.create_room(room_name, sender)
-
         if room_code is None:
             raise ValueError(f"Player {sender} does not exist")
 
@@ -156,24 +150,24 @@ class GatewayService:
     @srpc
     def challenge(self, socket_id, challenged):
         username = self.hub.get_username(socket_id)
-
         if username is None:
             raise PermissionError("Not identified connection")
 
-        code = self.match_rpc.generate_match(username, challenged)
+        start_time = time.time()
+        code = self.match_rpc.generate_match_code(username, challenged, start_time)
         self.hub.unicast(self.hub.get_socket_id(challenged), 'challenge', {
             "sender": username,
-            "code": code["code"],
-            "flags": code["flags"]
+            "start_time": start_time,
+            "code": code
         })
 
     @srpc
-    def accept_challenge(self, socket_id, challenger, code, flags):
+    def accept_challenge(self, socket_id: str, challenger: str, start_time: float, code: str):
         challenged = self.hub.get_username(socket_id)
         if challenged is None:
             raise PermissionError("Not identified connection")
 
-        real_code = self.match_rpc.generate_match(challenger, challenged)["code"]
+        real_code = self.match_rpc.generate_match_code(challenger, challenged, start_time)
         if code != real_code:
             raise ValueError(f"Invalid challenge code")
 
@@ -185,15 +179,53 @@ class GatewayService:
         self.hub.subscribe(socket_id, match_channel)
         self.hub.subscribe(socket_id_b, match_channel)
 
+        self.hub.begin_match(code, socket_id, socket_id_b)
+
+        end_time = self.hub.get_match(socket_id)["end_time"]
         self.hub.broadcast(match_channel, "match_begins", {
             "code": code,
-            "flags": flags
+            "flags": self.match_rpc.get_flags_images(code),
+            "end_time": end_time
         })
 
     @srpc
-    def guess_flag(self, socket_id, code, guess):
+    def guess_flag(self, socket_id, guess):
+        match = self.hub.get_match(socket_id)
+        code = match["code"]
+
         match_channel = f"match;{code}"
+        right_guess = self.match_rpc.guess_flag(code, guess)
         self.hub.broadcast(match_channel, "guess", {
+            "guesser": self.hub.get_username(socket_id),
             "guess": guess,
-            "right": self.match_rpc.guess_flag(code, guess)
+            "right": right_guess
         })
+
+        if right_guess:
+            self.hub.give_point(socket_id)
+        if match["player1"]["score"] >= 20 or match["player2"]["score"] >= 20:
+            self.hub.end_match(code)
+
+    def end_match(self, code):
+        match = self.hub.pop_match(code)
+        if match is None:
+            raise ValueError(f"Can't end unregistered match: {code}")
+
+        player1 = match["player1"]
+        player2 = match["player2"]
+
+        match_channel = f"match;{code}"
+        self.hub.broadcast(match_channel, "end_match", {
+            "username1": self.hub.get_username(player1["socket_id"]),
+            "username2": self.hub.get_username(player2["socket_id"]),
+            "score1": player1["socket_id"],
+            "score2": player2["socket_id"]
+        })
+
+        self.hub.unsubscribe(player1["socket_id"], match_channel)
+        self.hub.unsubscribe(player2["socket_id"], match_channel)
+
+    @timer(interval=0.5)
+    def update_timer(self):
+        for match in self.hub.get_timed_out_matches():
+            self.end_match(match["code"])

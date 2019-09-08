@@ -27,7 +27,7 @@ class SocketConnection:
         except WebSocketTimeoutException:
             return
 
-    def send(self, method: str, data: dict = None):
+    def send(self, method: str, data: dict = None, timeout: float = 0.7):
         if data is None:
             data = dict()
 
@@ -36,14 +36,17 @@ class SocketConnection:
             'data': data
         }
         self.ws.send(json.dumps(payload))
-        self.update_message_list()
-        responses = self.recv("result")
+
+        responses = self.recv("result", timeout)
         if len(responses) > 1:
             warnings.warn(f"received {len(responses)} results. Ignoring {len(responses)-1} messages")
+        elif len(responses) == 0:
+            warnings.warn("No results")
+            return
         return responses[-1]
 
-    def recv(self, s_type: str):
-        self.update_message_list()
+    def recv(self, s_type: str, timeout: float = 0.7):
+        self.update_message_list(timeout)
         messages = self.unseen_messages.get(s_type)
         if messages is not None:
             self.unseen_messages[s_type] = list()

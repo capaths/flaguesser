@@ -1,11 +1,9 @@
-import json
-
-import pytest
 import requests
-import time
 
-from nameko.testing.services import worker_factory
-from websocket import create_connection, WebSocketTimeoutException
+from .utils import COUNTRIES
+from .utils.socket_connection import SocketConnection
+
+import time
 
 USER = lambda x: f"TestUser{x}"
 PASS = lambda x: f"secret{x}"
@@ -16,21 +14,16 @@ WS_URL = f'ws://localhost:8000/ws'
 
 
 def test_identification():
-    ws_a = create_connection(WS_URL)
-    ws_b = create_connection(WS_URL)
-    ws_c = create_connection(WS_URL)
+    ws_a = SocketConnection(WS_URL)
+    ws_b = SocketConnection(WS_URL)
+    ws_c = SocketConnection(WS_URL)
 
     # get online users without identified users
     req = requests.get("http://localhost:8000/online_users")
     assert len(req.json()) == 0
 
     # identify one socket
-    ws_a.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('A')
-        }
-    }))
+    assert ws_a.send('identify', {'username': USER('A')})["success"]
 
     # get online users with one identified user
     req = requests.get("http://localhost:8000/online_users")
@@ -38,19 +31,8 @@ def test_identification():
     assert req.json()[0] == USER('A')
 
     # identify two sockets more
-    ws_b.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('B')
-        }
-    }))
-
-    ws_c.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('C')
-        }
-    }))
+    assert ws_b.send('identify', {'username': USER('B')})["success"]
+    assert ws_c.send('identify', {'username': USER('C')})["success"]
 
     # get online users with three identified users
     req = requests.get("http://localhost:8000/online_users")
@@ -58,6 +40,7 @@ def test_identification():
 
     # disconnect one
     ws_c.close()
+
     req = requests.get("http://localhost:8000/online_users")
     assert len(req.json()) == 2
 
@@ -66,130 +49,100 @@ def test_identification():
 
 
 def test_challenge():
-    ws_a = create_connection(WS_URL)
-    ws_b = create_connection(WS_URL)
-    ws_c = create_connection(WS_URL)
-
-    ws_a.settimeout(1)
-    ws_b.settimeout(1)
-    ws_c.settimeout(1)
-
-    ws_a.recv()
-    ws_b.recv()
-    ws_c.recv()
+    ws_a = SocketConnection(WS_URL)
+    ws_b = SocketConnection(WS_URL)
 
     # identify sockets
-    ws_a.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('A')
-        }
-    }))
-
-    ws_b.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('B')
-        }
-    }))
-
-    ws_c.send(json.dumps({
-        'method': 'identify',
-        'data': {
-            'username': USER('C')
-        }
-    }))
-
-    ws_a.recv()
-    ws_b.recv()
-    ws_c.recv()
+    assert ws_a.send('identify', {'username': USER('A')})["success"]
+    assert ws_b.send('identify', {'username': USER('B')})["success"]
 
     # challenge user A to B
-    ws_a.send(json.dumps({
-        'method': 'challenge',
-        'data': {
-            'challenged': USER('B')
-        }
-    }))
-
-    ws_a.recv()
-
-    try:
-        data_b = ws_b.recv()
-    except WebSocketTimeoutException:
-        assert False
-
-    challenge_b = json.loads(data_b)["data"]
+    assert ws_a.send('challenge', {'challenged': USER('B')})["success"]
+    challenge_b = ws_b.recv('event')[0]["data"]
     assert challenge_b["sender"] == USER('A')
 
     code = challenge_b["code"]
-    flags = challenge_b["flags"]
 
     # accept challenge with a wrong code
-    ws_b.send(json.dumps({
-        'method': 'accept_challenge',
-        'data': {
-            'challenger': USER('A'),
-            'code': "wrong"
-        }
-    }))
-
-    assert not json.loads(ws_b.recv())["success"]
+    assert not ws_b.send('accept_challenge', {
+        'challenger': USER('A'),
+        'code': 'wrong',
+        'start_time': challenge_b["start_time"]
+    })["success"]
 
     # accept challenge with the code
-    ws_b.send(json.dumps({
-        'method': 'accept_challenge',
-        'data': {
-            'challenger': USER('A'),
-            'code': code,
-            'flags': flags
-        }
-    }))
+    assert ws_b.send('accept_challenge', {
+        'challenger': USER('A'),
+        'start_time': challenge_b["start_time"],
+        'code': code
+    })["success"]
 
-    match_b = json.loads(ws_b.recv())
-    assert match_b["event"] == "match_begins"
+    event_b = ws_b.recv("event")[0]
+    event_a = ws_a.recv("event")[0]
+    assert event_b["event"] == "match_begins"
+    assert event_a["event"] == "match_begins"
 
-    match_a = json.loads(ws_a.recv())
-    assert match_a["event"] == "match_begins"
+    assert event_a["data"]["code"] == code
+    assert event_b["data"]["code"] == code
 
-    ws_b.recv()
+    assert event_a["data"]["end_time"] == event_b["data"]["end_time"]
+    end_time = event_a["data"]["end_time"]
 
     # wrong flag guessing
-    ws_a.send(json.dumps({
-        'method': 'guess_flag',
-        'data': {
-            'code': code,
-            'guess': "Unexistent Country"
-        }
-    }))
+    assert ws_a.send('guess_flag', {
+        'guess': "Unexistent Country"
+    })["success"]
 
-    assert not json.loads(ws_a.recv())["data"]["right"]
-    assert not json.loads(ws_b.recv())["data"]["right"]
+    assert not ws_a.recv("event")[0]["data"]["right"]
+    assert not ws_b.recv("event")[0]["data"]["right"]
 
-    ws_a.recv()
+    import random
+    random.seed(code)
+    test_countries = random.sample(COUNTRIES, 10)
 
-    # right flag guessing
-    ws_a.send(json.dumps({
-        'method': 'guess_flag',
-        'data': {
-            'code': code,
-            'guess': flags[0]["name"]
-        }
-    }))
+    # many flag guessing
+    for country in test_countries[:5]:
+        assert ws_a.send('guess_flag', {
+            'guess': country
+        })["success"]
 
-    assert json.loads(ws_a.recv())["data"]["right"]
-    assert json.loads(ws_b.recv())["data"]["right"]
+    for country in test_countries[5:]:
+        assert ws_b.send('guess_flag', {
+            'guess': country
+        })["success"]
 
-    # send end signal
-    ws_a.send(json.dumps({
-        'method': 'end_match',
-        'data': {
-            'code': code,
-            'guess': flags[0]["name"]
-        }
-    }))
+    score_a = 0
+    events_a = ws_a.recv("event")
+    for event in events_a:
+        if event["data"]["guesser"] == USER("A") and event["data"]["right"]:
+            score_a += 1
+
+    score_b = 0
+    events_b = ws_b.recv("event")
+    for event in events_b:
+        if event["data"]["guesser"] == USER("B") and event["data"]["right"]:
+            score_b += 1
+
+    # check if match ends when reaching end_time
+    wait_time = max(0, end_time - time.time()) + 1
+    time.sleep(wait_time)
+
+    last_events_a = events_a + ws_a.recv("event")
+    last_events_b = events_b + ws_b.recv("event")
+
+    end_match_a = None
+    for event in last_events_a:
+        if event["event"] == "end_match":
+            end_match_a = event["data"]
+
+    end_match_b = None
+    for event in last_events_b:
+        if event["event"] == "end_match":
+            end_match_b = event["data"]
+
+    assert end_match_a is not None
+    assert end_match_b is not None
 
     # disconnect
     ws_a.close()
     ws_b.close()
-    ws_c.close()

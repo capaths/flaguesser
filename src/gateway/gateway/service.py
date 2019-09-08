@@ -120,11 +120,15 @@ class GatewayService:
 
     # Chat
     @srpc
-    def create_room(self, socket_id, sender, room_name, username=None):
+    def create_room(self, socket_id, room_name, username=None):
         self.try_socket_id(socket_id, username)
-        room_code = self.chat_rpc.create_room(room_name, sender)
+        username = self.hub.get_username(socket_id)
+        if username is None:
+            raise PermissionError("Not identified connection")
+
+        room_code = self.chat_rpc.create_room(room_name, username)
         if room_code is None:
-            raise ValueError(f"Player {sender} does not exist")
+            raise ValueError(f"Player {username} does not exist")
 
         room = json.loads(room_code)
         self.hub.register_room(room["room"]["code"])

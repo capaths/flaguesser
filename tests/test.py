@@ -31,7 +31,7 @@ def test_signup():
             'password': "secret"
         }
 
-        req = requests.post(url, json=payload)
+        req = requests.post(url, json=payload, timeout=20)
         data = json.loads(req.content)
 
         assert req.status_code == 200

@@ -48,7 +48,6 @@ def test_chat():
 
     # create chat room
     assert ws_a.send("create_room", {
-            'sender': USER("A"),
             'room_name': ROOM("A")
     })["success"]
 

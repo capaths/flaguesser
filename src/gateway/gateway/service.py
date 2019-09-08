@@ -161,7 +161,8 @@ class GatewayService:
 
         self.hub.broadcast(channel, 'new_message', {
             "sender": username,
-            "content": content
+            "content": content,
+            "room_code": room_code,
         })
 
     # Match

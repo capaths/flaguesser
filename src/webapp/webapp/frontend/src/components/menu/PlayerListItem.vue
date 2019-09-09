@@ -5,12 +5,12 @@
         </v-list-item-avatar>
         <v-list-item-content>
             <v-list-item-title v-text="username"></v-list-item-title>
-            <v-list-item-subtitle v-text="country"></v-list-item-subtitle>
+            <v-list-item-subtitle v-text="country + '-' + elo"></v-list-item-subtitle>
         </v-list-item-content>
         <v-spacer>
         </v-spacer>
         <v-list-item-action v-if="challenged">
-            <v-btn>Challenge sent!</v-btn>
+            <p>Challenge Complete!</p>
         </v-list-item-action>
     </v-list-item>
 </template>
@@ -33,6 +33,12 @@
             challenge() {
                 if (!this.challenged) {
                     this.challenged = true;
+                    this.$socket.sendObj({
+                        'method': 'challenge',
+                        'data': {
+                            'challenged': this.username,
+                        },
+                    })
                 }
             },
         },

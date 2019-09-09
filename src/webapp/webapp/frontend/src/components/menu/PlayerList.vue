@@ -1,5 +1,6 @@
 <template>
-    <v-card flat width="100%">
+    <v-card flat outlined>
+        <v-list dense width="100%" max-height="100%" id="chatList">
             <PlayerListItem
                     v-for="user in users"
                     :username="user.username"
@@ -8,25 +9,41 @@
                     :elo="user.elo"
                     :key="user.username"
             ></PlayerListItem>
+        </v-list>
+        <v-btn @click.prevent="reloadOnlineUsers">
+            Refresh
+        </v-btn>
     </v-card>
 </template>
 
 <script>
+    import {userService} from "../../_services/player.service";
+
     import PlayerListItem from './PlayerListItem';
+    import {mapState} from 'vuex';
 
     export default {
         name: 'PlayerList',
         data() {
             return {
                 users: [
-                    {
-                        username: 'capaths',
-                        country: 'Chile',
-                        avatar: 'https://www.belr.com/wp-content/uploads/2017/06/avatar-placeholder-generic-1.jpg',
-                        elo: 1000,
-                    },
                 ],
             };
+        },
+        methods: {
+            reloadOnlineUsers() {
+                userService.getOnlineUsers()
+                    .then(response => {
+                        this.users = Object.values(response.data);
+                        this.users = this.users.filter(user => user.username !== this.user.username);
+                    });
+            }
+        },
+        mounted() {
+            this.reloadOnlineUsers();
+        },
+        computed: {
+            ...mapState('account', ['user']),
         },
         components: {PlayerListItem},
     };

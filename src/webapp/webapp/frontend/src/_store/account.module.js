@@ -42,11 +42,8 @@ const actions = {
             });
     },
     logout({commit}) {
-        return userService.logout()
-            .then(() => {
-                commit("removeToken");
-                commit("logoutUser");
-            });
+        commit("removeToken");
+        commit("logoutUser");
     },
     inspectToken() {
         const token = this.state.jwt;

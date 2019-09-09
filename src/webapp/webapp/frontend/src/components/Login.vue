@@ -20,13 +20,13 @@
                                 label="Nombre de usuario"
                                 v-model="username"
                                 required
-                                @keydown.enter.prevent="attemptLogin"
+                                @keydown.enter.prevent="signupMode ? attemptSignup : attemptLogin"
                         ></v-text-field>
                         <v-text-field
                                 type="password"
                                 label="Contraseña"
                                 v-model="password"
-                                @keydown.enter.prevent="attemptLogin"
+                                @keydown.enter.prevent="signupMode ? attemptSignup : attemptLogin"
                         ></v-text-field>
                         <v-flex pa-1>
                             <a @click="toggleSignUp">

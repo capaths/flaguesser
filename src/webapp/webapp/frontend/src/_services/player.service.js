@@ -1,5 +1,14 @@
 import axios from "axios";
 
+const GATEWAY_URI = process.env.GATEWAY_URI || "http://localhost:8000/";
+
+function getOnlineUsers() {
+    return axios({
+        method: "get",
+        url: `${GATEWAY_URI}/online_users`
+    });
+}
+
 function login(username, password) {
     const payload = {
         username: username,
@@ -8,7 +17,7 @@ function login(username, password) {
 
     return axios({
         method: "post",
-        url: "http://localhost:8000/login",
+        url: `${GATEWAY_URI}/login`,
         data: payload,
     });
 }
@@ -22,7 +31,7 @@ function signup(username, password, country) {
 
     return axios({
         method: "post",
-        url: "http://localhost:8000/signup",
+        url: `${GATEWAY_URI}/signup`,
         data: payload,
     });
 }
@@ -34,7 +43,7 @@ function logout() {
 
     return axios({
         method: "post",
-        url: "http://localhost:8000/logout",
+        url: `${GATEWAY_URI}/logout`,
         data: payload,
     });
 }
@@ -43,4 +52,5 @@ export const userService = {
     login,
     logout,
     signup,
+    getOnlineUsers,
 };

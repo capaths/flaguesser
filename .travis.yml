@@ -13,6 +13,7 @@ before_install:
 
 before_script:
   - sleep 15
+  - docker-compose logs gateway
 
 script:
   - pip install -r requirements.txt

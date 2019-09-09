@@ -166,9 +166,19 @@ class GatewayService:
         })
 
     # Match
-    @http("GET", "/online_users")
+
+    @cors_http("GET", "/player/<string:username>")
+    def get_player(self, request, username):
+        return json.dumps(self.player_rpc.get_player_by_username(username))
+
+    @cors_http("GET", "/online_users")
     def get_connected_users(self, request):
-        return json.dumps(self.hub.get_active_users())
+        usernames = self.hub.get_active_users()
+        users = {}
+        for username in usernames:
+            player = self.player_rpc.get_player_by_username(username)
+            users[username] = player
+        return json.dumps(users)
 
     @srpc
     def challenge(self, socket_id, challenged, username=None):

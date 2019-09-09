@@ -59,7 +59,11 @@ def test_signup():
 
     # signup with used username
     req = requests.post(url, json=payload_a)
+
     assert req.status_code == 500
+
+    req = requests.get(f"http://localhost:8000/player/{USER('A')}")
+    assert req.json()["username"] == USER('A')
 
 
 def test_identification():
@@ -77,7 +81,7 @@ def test_identification():
     # get online users with one identified user
     req = requests.get("http://localhost:8000/online_users")
     assert len(req.json()) == 1
-    assert req.json()[0] == USER('A')
+    assert req.json()[USER('A')]["username"] == USER('A')
 
     # identify one more socket
     assert ws_c.send('identify', {'username': USER('C')})["success"]

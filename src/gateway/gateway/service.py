@@ -256,8 +256,8 @@ class GatewayService:
         self.hub.broadcast(match_channel, "end_match", {
             "username1": self.hub.get_username(player1["socket_id"]),
             "username2": self.hub.get_username(player2["socket_id"]),
-            "score1": player1["socket_id"],
-            "score2": player2["socket_id"]
+            "score1": player1["score"],
+            "score2": player2["score"]
         })
 
         self.hub.unsubscribe(player1["socket_id"], match_channel)

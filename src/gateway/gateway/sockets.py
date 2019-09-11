@@ -57,7 +57,9 @@ class SocketMatches:
 
         self.socket_matches[socket_id1] = [(code, socket_id2), 0]
         self.socket_matches[socket_id2] = [(code, socket_id1), 0]
-        self.active_matches[code] = (socket_id1, socket_id2, end_time)
+
+        guessed_flags = []
+        self.active_matches[code] = (socket_id1, socket_id2, end_time, guessed_flags)
 
     def get_match_by_socket(self, socket_id):
         match_score = self.socket_matches.get(socket_id)
@@ -107,10 +109,21 @@ class SocketMatches:
         socket_id = self.get_match_by_code(code)["player1"]["socket_id"]
         return self.pop_match(socket_id)
 
-    def give_point(self, socket_id):
+    def guess_flag(self, socket_id, country):
+        match_score = self.socket_matches.get(socket_id)
+        if match_score is None:
+            return
+
+        code = match_score[0][0]
+        guessed_flags = self.active_matches[code][3]
+
         score = self.socket_matches[socket_id][1]
+        if country in guessed_flags:
+            return False
+
+        guessed_flags.append(country)
         self.socket_matches[socket_id][1] = score + 1
-        return score + 1
+        return True
 
     def get_timed_out_matches(self):
         current_time = time.time()
@@ -166,8 +179,8 @@ class WebSocketHubProviderExt(WebSocketHubProvider):
         def get_match(socket_id):
             return self.socket_matches.get_match_by_socket(socket_id)
 
-        def give_point(socket_id):
-            return self.socket_matches.give_point(socket_id)
+        def guess_flag(socket_id, country):
+            return self.socket_matches.guess_flag(socket_id, country)
 
         def get_timed_out_matches():
             return self.socket_matches.get_timed_out_matches()
@@ -181,7 +194,7 @@ class WebSocketHubProviderExt(WebSocketHubProvider):
 
         hub.get_match = get_match
         hub.begin_match = begin_match
-        hub.give_point = give_point
+        hub.guess_flag = guess_flag
         hub.get_timed_out_matches = get_timed_out_matches
         hub.pop_match = pop_match
 

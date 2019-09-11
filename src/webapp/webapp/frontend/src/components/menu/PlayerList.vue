@@ -17,7 +17,7 @@
 </template>
 
 <script>
-    import {userService} from "../../_services/player.service";
+    import {userService} from '../../_services/player.service';
 
     import PlayerListItem from './PlayerListItem';
     import {mapState} from 'vuex';
@@ -33,11 +33,11 @@
         methods: {
             reloadOnlineUsers() {
                 userService.getOnlineUsers()
-                    .then(response => {
+                    .then((response) => {
                         this.users = Object.values(response.data);
-                        this.users = this.users.filter(user => user.username !== this.user.username);
+                        this.users = this.users.filter((user) => user.username !== this.user.username);
                     });
-            }
+            },
         },
         mounted() {
             this.reloadOnlineUsers();

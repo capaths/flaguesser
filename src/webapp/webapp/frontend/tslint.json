@@ -21,9 +21,11 @@
     "interface-name": false,
     "ordered-imports": false,
     "object-literal-sort-keys": false,
-    "no-consecutive-blank-lines": false
+    "no-consecutive-blank-lines": false,
+    "no-console": false
   },
   "jsRules": {
-    "object-literal-sort-keys": false
+    "object-literal-sort-keys": false,
+    "no-console": false
   }
 }

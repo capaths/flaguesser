@@ -20,13 +20,13 @@
                                 label="Nombre de usuario"
                                 v-model="username"
                                 required
-                                @keydown.enter.prevent="signupMode ? attemptSignup : attemptLogin"
+                                @keydown.enter.prevent="attemptAuto"
                         ></v-text-field>
                         <v-text-field
                                 type="password"
                                 label="Contraseña"
                                 v-model="password"
-                                @keydown.enter.prevent="signupMode ? attemptSignup : attemptLogin"
+                                @keydown.enter.prevent="attemptAuto"
                         ></v-text-field>
                         <v-flex pa-1>
                             <a @click="toggleSignUp">
@@ -39,6 +39,7 @@
                                     label="País"
                                     v-model="country"
                                     v-if="signupMode"
+                                    @keydown.enter.prevent="attemptAuto"
                             ></v-text-field>
                         </v-fade-transition>
                         <v-btn class="mr-4" @click="attemptSignup" :disabled="waiting" v-if="signupMode">
@@ -85,6 +86,13 @@
         },
         methods: {
             ...mapActions('account', ['login', 'signup']),
+            attemptAuto() {
+                if (this.signupMode) {
+                    this.attemptSignup();
+                } else {
+                    this.attemptLogin();
+                }
+            },
             attemptLogin() {
                 const credentials = {
                     username: this.username,
@@ -94,6 +102,12 @@
                 this.login(credentials)
                     .then(() => {
                         this.waiting = false;
+                        this.$socket.sendObj({
+                            method: 'identify',
+                            data: {
+                                guess: this.user.username,
+                            },
+                        });
                     })
                     .catch((e: any) => {
                         this.waiting = false;
@@ -118,8 +132,6 @@
                     .catch((e: any) => {
                         this.waiting = false;
                         this.showError('Error desconocido');
-                        console.log(e.response.data);
-                        console.log(e.response.status);
                     });
             },
             toggleSignUp() {

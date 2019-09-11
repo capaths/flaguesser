@@ -86,17 +86,17 @@
             return {
                 message: '',
                 msgs: {
-                    "Global": {
-                        "name": "Global",
-                        "messages": [],
+                    Global: {
+                        name: 'Global',
+                        messages: [],
                     },
                 },
                 dialog: false,
-                selectedRoom: "Global",
-                roomCode: "",
+                selectedRoom: 'Global',
+                roomCode: '',
                 createMode: false,
                 rooms: [
-                    "Global",
+                    'Global',
                 ],
             };
         },
@@ -106,15 +106,13 @@
         mounted() {
             this.$options.sockets.onmessage = (message) => {
                 const data = JSON.parse(message.data);
-                if (data.type === "event") {
+                if (data.type === 'event') {
                     if (data.event === 'new_message') {
                         this.pushMessage(data.data, data.data.room_code);
-                    }
-                    else if (data.event === 'room_data') {
-                        this.subscribeRoom(data.data['room'].name, data.data['room'].code);
+                    } else if (data.event === 'room_data') {
+                        this.subscribeRoom(data.data.room.name, data.data.room.code);
                     }
                 }
-                console.log(data);
             };
 
             this.$options.sockets.onopen = () => {
@@ -138,16 +136,16 @@
                     method: 'process_message',
                     data: {
                         content: this.message,
-                        room_code: this.selectedRoom === "Global" ? undefined : this.selectedRoom,
+                        room_code: this.selectedRoom === 'Global' ? undefined : this.selectedRoom,
                     },
                 });
                 this.message = '';
             },
             pushMessage(message, room) {
                 if (room === null) {
-                    this.msgs['Global']['messages'].push(message);
+                    this.msgs.Global.messages.push(message);
                 } else {
-                    this.msgs[room]["messages"].push(message);
+                    this.msgs[room].messages.push(message);
                 }
                 this.$forceUpdate();
             },
@@ -162,13 +160,12 @@
             joinRoom() {
                 this.dialog = false;
                 const res = this.roomCode.split(';');
-                console.log(res);
                 this.subscribeRoom(res[0], res[1]);
 
                 this.roomCode = '';
             },
             getCode() {
-                this.message = this.msgs[this.selectedRoom]["name"] + ';' + this.selectedRoom;
+                this.message = this.msgs[this.selectedRoom].name + ';' + this.selectedRoom;
             },
             createRoom() {
                 this.dialog = false;

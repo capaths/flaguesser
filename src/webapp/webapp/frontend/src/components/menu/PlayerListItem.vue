@@ -34,11 +34,11 @@
                 if (!this.challenged) {
                     this.challenged = true;
                     this.$socket.sendObj({
-                        'method': 'challenge',
-                        'data': {
-                            'challenged': this.username,
+                        method: 'challenge',
+                        data: {
+                            challenged: this.username,
                         },
-                    })
+                    });
                 }
             },
         },

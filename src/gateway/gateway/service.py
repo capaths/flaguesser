@@ -231,17 +231,24 @@ class GatewayService:
         match = self.hub.get_match(socket_id)
         code = match["code"]
 
+        # check if right guess
+        flag_url = None
+
+        not_guessed_yet = self.hub.guess_flag(socket_id, guess)
+        if not_guessed_yet:
+            flag_url = self.match_rpc.guess_flag(code, guess)
+
+        # broadcast guess result
         match_channel = f"match;{code}"
-        right_guess = self.match_rpc.guess_flag(code, guess)
         self.hub.broadcast(match_channel, "guess", {
             "guesser": self.hub.get_username(socket_id),
             "guess": guess,
-            "right": right_guess
+            "url": flag_url,
         })
 
-        if right_guess:
-            self.hub.give_point(socket_id)
-        if match["player1"]["score"] >= 20 or match["player2"]["score"] >= 20:
+        # end match if someone reached maximum score
+        updated_match = self.hub.get_match(socket_id)
+        if updated_match["player1"]["score"] >= 20 or updated_match["player2"]["score"] >= 20:
             self.hub.end_match(code)
 
     def end_match(self, code):

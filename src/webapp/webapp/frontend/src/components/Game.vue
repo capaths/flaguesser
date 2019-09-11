@@ -17,22 +17,22 @@
 </template>
 
 <script>
-    import Flags from './game/Flags'
+    import Flags from './game/Flags';
     import PlayerList from './menu/PlayerList';
 
     export default {
-        name: "Game",
+        name: 'Game',
         mounted() {
             this.$options.sockets.onmessage = (message) => {
                 const data = JSON.parse(message.data);
-                if (data.type === "event") {
+                if (data.type === 'event') {
                     if (data.event === 'challenge') {
                         this.lastChallenge = data.data;
                         this.dialog = true;
                     } else if (data.event === 'match_begins') {
                         this.code = data.data.code;
                         this.flags = {};
-                        data.data.flags.forEach(flag => {
+                        data.data.flags.forEach((flag) => {
                             this.flags[flag] = false;
                         });
                     } else if (data.event === 'end_match') {
@@ -60,10 +60,10 @@
                 this.$socket.sendObj({
                     method: 'accept_challenge',
                     data: {
-                        'challenger': this.lastChallenge.sender,
-                        'code': this.lastChallenge.code,
-                        'start_time': this.lastChallenge.start_time
-                    }
+                        challenger: this.lastChallenge.sender,
+                        code: this.lastChallenge.code,
+                        start_time: this.lastChallenge.start_time,
+                    },
                 });
                 this.dialog = false;
             },

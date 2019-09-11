@@ -19,12 +19,35 @@
     import Chat from './menu/Chat';
     import Game from './Game';
 
+    import {mapState} from 'vuex';
+
     export default {
         name: 'Menu',
         components: {
             Chat,
             Profile,
             Game,
+        },
+        computed: {
+            ...mapState('account', ['user']),
+        },
+        beforeMount() {
+            this.$options.sockets.onopen = () => {
+                this.$socket.sendObj({
+                    method: 'identify',
+                    data: {
+                        guess: this.user.username,
+                    },
+                });
+            };
+        },
+        mounted() {
+            this.$options.sockets.onmessage = (message) => {
+                const data = JSON.parse(message.data);
+                if (data.type === 'event') {
+                    console.log(data.event + " - " + JSON.stringify(data.data));
+                }
+            };
         },
     };
 </script>

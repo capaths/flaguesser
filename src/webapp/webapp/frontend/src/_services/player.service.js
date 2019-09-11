@@ -5,7 +5,7 @@ const GATEWAY_URI = process.env.GATEWAY_URI || "http://localhost:8000/";
 function getOnlineUsers() {
     return axios({
         method: "get",
-        url: `${GATEWAY_URI}/online_users`
+        url: `${GATEWAY_URI}/online_users`,
     });
 }
 

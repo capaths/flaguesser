@@ -56,8 +56,8 @@ def test_challenge():
         'guess': "Unexistent Country"
     })["success"]
 
-    assert not ws_a.recv("event")[0]["data"]["right"]
-    assert not ws_b.recv("event")[0]["data"]["right"]
+    assert ws_a.recv("event")[0]["data"]["url"] is None
+    assert ws_b.recv("event")[0]["data"]["url"] is None
 
     import random
     random.seed(code)
@@ -77,13 +77,13 @@ def test_challenge():
     score_a = 0
     events_a = ws_a.recv("event")
     for event in events_a:
-        if event["data"]["guesser"] == USER("A") and event["data"]["right"]:
+        if event["data"]["guesser"] == USER("A") and event["data"]["url"] is not None:
             score_a += 1
 
     score_b = 0
     events_b = ws_b.recv("event")
     for event in events_b:
-        if event["data"]["guesser"] == USER("B") and event["data"]["right"]:
+        if event["data"]["guesser"] == USER("B") and event["data"]["url"] is not None:
             score_b += 1
 
     # check if match ends when reaching end_time

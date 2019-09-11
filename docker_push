@@ -14,11 +14,14 @@ do
     if [[ $? == 0 ]]; then
         docker tag ${DOCKER_TAG} registry.heroku.com/flaguesser/${WORKER_NAME}
         docker push registry.heroku.com/flaguesser/${WORKER_NAME}
+        heroku container:release ${WORKER_NAME} -a flaguesser
     fi
 done
 
 echo "${HEROKU_APIKEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser/web
+
 if [[ $? == 0 ]]; then
     docker tag capaths/gamesgateway registry.heroku.com/flaguesser/web
     docker push registry.heroku.com/flaguesser/web
+    heroku container:release web -a flaguesser
 fi

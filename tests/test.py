@@ -28,7 +28,8 @@ def test_signup():
 
         payload = {
             'username': username,
-            'password': "secret"
+            'password': "secret",
+            'country': "Chile"
         }
 
         req = requests.post(url, json=payload, timeout=20)
@@ -40,17 +41,20 @@ def test_signup():
     # test users
     payload_a = {
         'username': USER("A"),
-        'password': "secret"
+        'password': "secret",
+        'country': "Chile"
     }
 
     payload_b = {
         'username': USER("B"),
-        'password': "secret"
+        'password': "secret",
+        'country': "Chile"
     }
 
     payload_c = {
         'username': USER("C"),
-        'password': "secret"
+        'password': "secret",
+        'country': "Chile"
     }
 
     requests.post(url, json=payload_a)

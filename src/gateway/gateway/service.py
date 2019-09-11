@@ -5,7 +5,6 @@ import time
 
 from nameko.timer import timer
 from nameko.rpc import RpcProxy
-from nameko.web.handlers import http
 from nameko.exceptions import BadRequest
 from nameko.extensions import DependencyProvider
 
@@ -14,7 +13,7 @@ from nameko.web.websocket import rpc as srpc
 from marshmallow import ValidationError
 
 from gateway.sockets import WebSocketHubProviderExt
-from gateway.schemas import LoginSchema
+from gateway.schemas import LoginSchema, SignUpSchema
 from gateway.cors_http import cors_http
 
 
@@ -73,17 +72,18 @@ class GatewayService:
 
     @cors_http("POST", "/signup")
     def signup(self, request):
-        schema = LoginSchema(strict=True)
+        schema = SignUpSchema(strict=True)
 
         try:
-            login_data = schema.loads(request.get_data(as_text=True)).data
+            signup_data = schema.loads(request.get_data(as_text=True)).data
         except ValueError as exc:
             raise BadRequest("Invalid json: {}".format(exc))
 
-        username = login_data["username"]
-        password = login_data["password"]
+        username = signup_data["username"]
+        password = signup_data["password"]
+        country = signup_data["country"]
 
-        if self.auth.signup(username, password):
+        if self.auth.signup(username, password, country):
             user_data = self.auth.login(username, password)
             if user_data:
                 return 200, user_data

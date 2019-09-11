@@ -1,30 +1,30 @@
 sudo: required
 services:
-  - docker
-
+- docker
 language: python
 python:
-  - "3.6"
-
+- '3.6'
 before_install:
-  - docker-compose build
-  - docker-compose up -d
-  - docker ps -a
-
+- docker-compose build
+- docker-compose up -d
+- docker ps -a
 before_script:
-  - sleep 15
-  - docker-compose logs gateway
-
+- sleep 15
+- docker-compose logs gateway
 script:
-  - pip install -r requirements.txt
-  - pytest tests/test.py
-  - pytest tests/test_match.py
-  - pytest tests/test_chat.py
-
+- pip install -r requirements.txt
+- pytest tests/test.py
+- pytest tests/test_match.py
+- pytest tests/test_chat.py
 after_failure:
-  - docker ps -a
-  - docker-compose logs gateway
-
+- docker ps -a
+- docker-compose logs gateway
 after_success:
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker-compose push gateway webapp
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+- docker-compose push gateway webapp
+deploy:
+  provider: script
+  script: bash docker_push
+env:
+  global:
+    secure: G5B4FU4N+ZZMJFZybYY/VwycjfMxx5KKpWDePRJu0QsFY56qLc1CqVjVQARL9NpE0VJIoLIVz6d+Nb4+VtDNNipAAA0vnPPgJ6QcSn39liEVCjFGRm8kvlEjdE+N4QNOzddhIc3IC6fckTUJkzB1Afx5wSpfM+UGveJDARAzyBod84bVlCueCK0WLjj/8lmWQHifPyL/Mxo7ny81AfRF5HMBmO+jU+BDOkX0RulnEmO/99A0Xab9hZYLD7JecBGEByZk9PVPvEwlJl7hTEi2iY0XF+qiOph9xHxcTI02RBPvMgoyE5BJVA9vhu5alCstHGfWKBj9/HjIenptk1pBxVnGRoLkQ5QGbR+cCr7wOpmzzAZF4VJuKbgcCrHPTEmKjVtvmgiZQi6x/dCoG+7/amrsdssuimiUYoT5Mb2VzUcKBrDS8oQM9dwZ4MF5XWnJWWkxebXHsmns+TKcamSeik78NTk7k2qr+cqvwob63qJWp65mQQ7vujk3cErPM1sX3j8KhvLYTKraLi9HMx6XkCN7eTHKUnsIoRicEfxW+h7IZT8d6yW7AuQUPhRCBMW/A8e+v4xPzBbC+CX7IgrGlK4u50YVkwYTspglnZlODb1xnmXEisPRXmU8D09bQN/OXGpxOzM8I/OKM0YdR5iwnhrJ4Sr15lpDVYeTt1xibSc=

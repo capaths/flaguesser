@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+APPS=( "flaguesser" "flaguesser-access" "flaguesser-chat" "flaguesser-match" "flaguesser-player" )
+DOCKER_IMGS=( "capaths/gamesgateway" "capaths/gamesaccess" "capaths/gameschat" "capaths/gamesmatch" "161905/gamesplayer" )
+
+push_image () {
+    echo "${HEROKU_APIKEY}" | docker login -u "_" --password-stdin registry.heroku.com/${APP_NAME}/web
+    if [[ $? == 0 ]]; then
+        docker tag ${DOCKER_TAG} registry.heroku.com/${APP_NAME}/web
+        docker push registry.heroku.com/${APP_NAME}/web
+    fi
+}
+
+for i in "${!APPS[@]}"
+do
+    APP_NAME=${APPS[$i]}
+    DOCKER_TAG=${DOCKER_IMGS[$i]}
+    push_image
+done

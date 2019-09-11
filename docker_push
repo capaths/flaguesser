@@ -10,14 +10,14 @@ do
 
     echo ${WORKER_NAME}
 
-    echo "${HEROKU_APIKEY}" | docker login -u "${HEROKU_EMAIL}" --password-stdin registry.heroku.com/flaguesser/${WORKER_NAME}
+    echo "${HEROKU_APIKEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser/${WORKER_NAME}
     if [[ $? == 0 ]]; then
         docker tag ${DOCKER_TAG} registry.heroku.com/flaguesser/${WORKER_NAME}
         docker push registry.heroku.com/flaguesser/${WORKER_NAME}
     fi
 done
 
-echo "${HEROKU_APIKEY}" | docker login -u "${HEROKU_EMAIL}" --password-stdin registry.heroku.com/flaguesser/web
+echo "${HEROKU_APIKEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser/web
 if [[ $? == 0 ]]; then
     docker tag capaths/gamesgateway registry.heroku.com/flaguesser/web
     docker push registry.heroku.com/flaguesser/web

@@ -17,14 +17,6 @@ script:
 - pytest tests/test.py
 - pytest tests/test_match.py
 - pytest tests/test_chat.py
-language: node_js
-node_js:
-- '10'
-before_script:
-  - psql -U "postgres" < travis.sql
-script:
-- npm install
-- npm test
 after_failure:
 - docker ps -a
 - docker-compose logs gateway

@@ -1,7 +1,10 @@
 
 """ Gateway """
+import os
 import json
 import time
+
+import requests
 
 from nameko.timer import timer
 from nameko.rpc import RpcProxy
@@ -13,7 +16,7 @@ from nameko.web.websocket import rpc as srpc
 from marshmallow import ValidationError
 
 from gateway.sockets import WebSocketHubProviderExt
-from gateway.schemas import LoginSchema, SignUpSchema
+from gateway.schemas import LoginSchema, SignUpSchema, TicketSchema
 from gateway.cors_http import cors_http
 
 
@@ -47,9 +50,32 @@ class GatewayService:
     match_rpc = RpcProxy('match')
     player_rpc = RpcProxy('player')
 
-    @cors_http("GET", "/ticket")
-    def get_ticket(self, request):
-        return self.ticket_rpc.get_ticket("user")
+    @cors_http("GET", "/ticket/get/<int:id>")
+    def get_ticket(self, request, id):
+        ticket_url = os.getenv("TICKET_URL", "http://localhost:9000/")
+        return requests.get(ticket_url + f"/get/{id}")
+
+    @cors_http("GET", "/ticket/all")
+    def get_all_tickets(self, request):
+        ticket_url = os.getenv("TICKET_URL", "http://localhost:9000/")
+        return requests.get(ticket_url + "/all")
+
+    @cors_http("POST", "/ticket/save")
+    def get_all_tickets(self, request):
+        schema = TicketSchema(strict=True)
+
+        try:
+            ticket_data = schema.loads(request.get_data(as_text=True)).data
+        except ValueError as exc:
+            return 400, f"Not valid JSON: {exc}"
+        except ValidationError as exc:
+            return 400, f"Not valid arguments: {exc}"
+
+        ticket_url = os.getenv("TICKET_URL", "http://localhost:9000/")
+        return requests.post(ticket_url + "/save", json={
+            "title": ticket_data["title"],
+            "description": ticket_data["description"]
+        }).json()
 
     @cors_http("POST", "/login")
     def login(self, request):
@@ -231,10 +257,8 @@ class GatewayService:
         match = self.hub.get_match(socket_id)
         code = match["code"]
 
-        # check if right guess
-        flag_url = None
-
-        not_guessed_yet = self.hub.guess_flag(socket_id, guess)
+        flag_url = self.match_rpc.guess_flag(code, guess)
+        not_guessed_yet = self.hub.guess_flag(socket_id, flag_url)
         if not_guessed_yet:
             flag_url = self.match_rpc.guess_flag(code, guess)
 

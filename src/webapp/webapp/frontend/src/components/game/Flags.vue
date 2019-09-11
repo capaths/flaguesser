@@ -7,7 +7,7 @@
             <v-col v-for="i in Array(5).keys()" :key="i" style="height: 40px;width: 120px;" cols="2" justify="space-around" no-gutters>
                 <v-row v-for="flag in getFlagSlice(i)" :key="flag.url">
                     <v-card  outlined tile style="height:90px;">
-                        <v-img :src="flag" style="height:90px;"></v-img>
+                        <v-img :src="flag" :style="'height:90px;'+(!flags[flag]?'':'opacity:0.3;')"></v-img>
                     </v-card>
                 </v-row>
             </v-col>
@@ -32,6 +32,8 @@
                 const data = JSON.parse(message.data);
                 if (data.type === 'event') {
                     if (data.event === 'guess') {
+                        this.flags[data.data.url] = true;
+                        this.$forceUpdate();
                     }
                 }
             };

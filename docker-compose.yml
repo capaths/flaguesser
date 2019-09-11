@@ -130,6 +130,8 @@ services:
       - ticketdb
     links:
       - "ticketdb:postgres"
+    ports:
+      - "9000:3000"
     environment:
       DB_PASSWORD: "password"
       DB_USER: "postgres"

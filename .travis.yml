@@ -34,7 +34,7 @@ after_success:
 
 after_deploy:
 - docker pull owasp/zap2docker-weekly
-- docker run --name owasp-gateway -t owasp/zap2docker-weekly zap-full-scan.py -t http://flaguesser.herokuapp.com/
+- docker run --name owasp-gateway -j -t owasp/zap2docker-weekly zap-full-scan.py -t http://flaguesser.herokuapp.com/
 
 
 

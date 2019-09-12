@@ -11,11 +11,11 @@ TEST_DESCRIPTION = "Hello, World!"
 
 
 def test_ticket():
-    req = requests.post("localhost:3000/save", json={
+    req = requests.post("localhost:8000/save", json={
         "title": TEST_TITLE,
         "description": TEST_DESCRIPTION
     })
 
-    req = requests.get("localhost:3000/all")
+    req = requests.get("localhost:8000/all")
 
     assert len(req.json()) >= 1

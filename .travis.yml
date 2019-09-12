@@ -26,7 +26,6 @@ script:
 - pytest tests/test_match.py
 - pytest tests/test_chat.py
 - pytest tests/test_sqli.py
-- pytest tests/test_ticket.py
 after_failure:
 - docker ps -a
 - docker-compose logs gateway

@@ -142,7 +142,10 @@ services:
   gateway:
     container_name: games-gateway
     image: capaths/gamesgateway
-    build: ./src/gateway
+    build:
+      content: ./src/gateway
+      cache_from:
+          capaths/gamesgateway
     restart: "no"
     ports:
       - "8000:8000"

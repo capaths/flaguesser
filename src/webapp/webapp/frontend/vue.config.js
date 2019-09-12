@@ -1,6 +1,6 @@
 const BundleTracker = require("webpack-bundle-tracker");
 
-const PUBLIC_PATH = process.env.PUBLIC_PATH || "http://127.0.0.1:8080/";
+const PUBLIC_PATH = process.env.PUBLIC_PATH || "/";
 
 module.exports = {
     publicPath: PUBLIC_PATH,

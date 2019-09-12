@@ -1,4 +1,3 @@
 webapp/frontend/node_modules/
 webapp/frontend/webpack-stats.json
-webapp/backend/venv
 webapp/dist

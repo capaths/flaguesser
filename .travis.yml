@@ -11,7 +11,13 @@ before_install:
 - docker ps -a
 before_script:
 - sleep 15
+- docker-compose logs webapp
 - docker-compose logs gateway
+- docker-compose logs access
+- docker-compose logs player
+- docker-compose logs match
+- docker-compose logs chat
+- docker-compose logs ticket
 script:
 - pip install -r requirements.txt
 - pytest tests/test.py

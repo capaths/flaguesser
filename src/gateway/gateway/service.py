@@ -60,6 +60,14 @@ class GatewayService:
         ticket_url = os.getenv("TICKET_URL", "http://localhost:9000/")
         return requests.get(ticket_url + "/all")
 
+    @cors_http("GET", "/match/all")
+    def get_all_matches(self, request):
+        return self.match_rpc.get_all_matches()
+
+    @cors_http("GET", "/match/byplayer/<string:username>")
+    def get_match_by_player(self, request, username):
+        return self.match_rpc.get_player_matches(username)
+
     @cors_http("POST", "/ticket/save")
     def get_all_tickets(self, request):
         schema = TicketSchema(strict=True)
@@ -283,14 +291,21 @@ class GatewayService:
         player1 = match["player1"]
         player2 = match["player2"]
 
+        username1 = self.hub.get_username(player1["socket_id"])
+        username2 = self.hub.get_username(player2["socket_id"])
+
+        score1 = player1["score"]
+        score2 = player2["score"]
+
         match_channel = f"match;{code}"
         self.hub.broadcast(match_channel, "end_match", {
-            "username1": self.hub.get_username(player1["socket_id"]),
-            "username2": self.hub.get_username(player2["socket_id"]),
-            "score1": player1["score"],
-            "score2": player2["score"]
+            "username1": username1,
+            "username2": username2,
+            "score1": score1,
+            "score2": score2
         })
 
+        self.match_rpc.end_match(username1, username2, score1, score2)
         self.hub.unsubscribe(player1["socket_id"], match_channel)
         self.hub.unsubscribe(player2["socket_id"], match_channel)
 
@@ -298,3 +313,4 @@ class GatewayService:
     def update_timer(self):
         for match in self.hub.get_timed_out_matches():
             self.end_match(match["code"])
+

@@ -2,6 +2,9 @@ from .utils import COUNTRIES
 from .utils.socket_connection import SocketConnection
 
 import time
+import logging
+
+import requests
 
 USER = lambda x: f"TestUser{x}"
 PASS = lambda x: f"secret{x}"
@@ -44,6 +47,8 @@ def test_challenge():
     event_a = ws_a.recv("event")[0]
     assert event_b["event"] == "match_begins"
     assert event_a["event"] == "match_begins"
+
+    logging.log(logging.INFO, "match begins")
 
     assert event_a["data"]["code"] == code
     assert event_b["data"]["code"] == code
@@ -88,6 +93,8 @@ def test_challenge():
 
     # check if match ends when reaching end_time
     wait_time = max(0, end_time - time.time()) + 1
+    logging.log(logging.INFO, f"waiting {wait_time} seconds to end match")
+
     time.sleep(wait_time)
 
     last_events_a = events_a + ws_a.recv("event")
@@ -109,3 +116,10 @@ def test_challenge():
     # disconnect
     ws_a.close()
     ws_b.close()
+
+    logging.log(logging.INFO, f"match ends")
+
+    req = requests.get("http://localhost:8000/match/all")
+    print(req.content)
+
+    assert False

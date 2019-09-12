@@ -145,7 +145,7 @@ services:
     build:
       context: ./src/gateway
       cache_from:
-          capaths/gamesgateway
+        - capaths/gamesgateway
     restart: "no"
     ports:
       - "8000:8000"

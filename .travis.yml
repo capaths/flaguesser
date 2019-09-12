@@ -8,6 +8,9 @@ python:
 before_install:
 - docker-compose build
 - docker-compose up -d
+- docker pull owasp/zap2docker-weekly
+- docker run --name owasp-gateway -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8000
+- docker run --name owasp-webapp -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8080
 - docker ps -a
 before_script:
 - sleep 15
@@ -22,9 +25,6 @@ after_failure:
 - docker-compose logs gateway
 after_success:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-- docker pull owasp/zap2docker-weekly
-- docker run --name owasp-gateway -p 8000:8000 -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8000
-- docker run --name owasp-webapp -p 8080:8080 -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8080
 - docker-compose push gateway webapp
 
 deploy:

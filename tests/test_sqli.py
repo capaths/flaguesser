@@ -13,4 +13,4 @@ def test_sqli():
     })
 
     req = requests.get("http://localhost:8000/player/SQL_Injection_Test")
-    assert req.status == 200
+    assert req.status_code == 200

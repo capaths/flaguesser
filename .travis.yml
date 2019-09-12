@@ -7,6 +7,8 @@ python:
 - '3.6'
 before_install:
 - docker-compose build
+- docker pull capaths/gameswebapp
+- docker pull capaths/gamescapaths
 - docker-compose up -d
 - docker ps -a
 before_script:

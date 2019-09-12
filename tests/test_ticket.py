@@ -11,11 +11,12 @@ TEST_DESCRIPTION = "Hello, World!"
 
 
 def test_ticket():
-    req = requests.get("localhost:8000/ticket/get")
-
-    req = requests.post("localhost:8000/ticket/all")
-
-    req = requests.get("localhost:8000/ticket/save", json={
+	req = requests.post("localhost:3000/save", json={
         "title": TEST_TITLE,
         "description": TEST_DESCRIPTION
     })
+
+ 
+    req = requests.get("localhost:3000/all")
+
+    

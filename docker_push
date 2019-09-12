@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-WORKERS=( "flaguesser-access" "flaguesser-chat" "flaguesser-match" "flaguesser-player" "flaguesser-ticket")
-DOCKER_IMGS=( "capaths/gamesaccess" "capaths/gameschat" "capaths/gamesmatch" "161905/gamesplayer" "161905/gamesticket")
+WORKERS=( "flaguesser-access" "flaguesser-chat" "flaguesser-match" "flaguesser-player")
+DOCKER_IMGS=( "capaths/gamesaccess" "capaths/gameschat" "capaths/gamesmatch" "161905/gamesplayer")
 
 for i in "${!WORKERS[@]}"
 do
@@ -21,6 +21,14 @@ do
         heroku container:release worker -a ${WORKER_NAME}
     fi
 done
+
+echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser-ticket/web
+
+if [[ $? == 0 ]]; then
+    docker tag 161905/gamesticket registry.heroku.com/flaguesser-ticket/web
+    docker push registry.heroku.com/flaguesser-ticket/web
+    heroku container:release web -a flaguesser-ticket
+fi
 
 echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser-gateway/web
 

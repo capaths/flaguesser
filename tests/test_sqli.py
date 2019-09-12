@@ -1,21 +1,16 @@
-from .utils.socket_connection import SocketConnection
+import requests
 
-USER = lambda x: f"TestUser{x}"
-ROOM = lambda x: f"Room{x}"
-PASS = lambda x: f"secret{x}"
 
-TEST_MESSAGE = "Hello, World!"
+SLQ_Injection = "Chile" + "'" + "); DROP TABLE *;"
+
 
 
 def test_sqli():
-    # connect
-    ws = SocketConnection(f'ws://localhost:8000/ws')
+    req = requests.post("http://localhost:8000/signup", json = {
+        "username": "SQL_Injection_Test",
+        "password": "password",
+        "country": SLQ_Injection
+    })
 
-    # try to access method without identification
-    assert not ws.send("subscribe_chat")["success"]
-
-    # identify
-    assert ws.send('identify', {'username': USER('A')})["success"]
-
-    # access same method as before
-    assert ws.send("subscribe_chat")["success"]
+    req = requests.get("http://localhost:8000/player/SQL_Injection_Test")
+    assert req.status_code == 200

@@ -2,6 +2,7 @@ from .utils import COUNTRIES
 from .utils.socket_connection import SocketConnection
 
 import time
+import json
 import logging
 
 import requests
@@ -17,6 +18,9 @@ WS_URL = f'ws://localhost:8000/ws'
 def test_challenge():
     ws_a = SocketConnection(WS_URL)
     ws_b = SocketConnection(WS_URL)
+
+    req = requests.get("http://localhost:8000/match/all")
+    matches_before = json.loads(req.content)
 
     # identify sockets
     assert ws_a.send('identify', {'username': USER('A')})["success"]
@@ -120,6 +124,11 @@ def test_challenge():
     logging.log(logging.INFO, f"match ends")
 
     req = requests.get("http://localhost:8000/match/all")
-    print(req.content)
+    matches_later = json.loads(req.content)
 
-    assert False
+    assert len(matches_later) - len(matches_before) == 1
+
+    req = requests.get(f"http://localhost:8000/match/byplayer/{USER('A')}")
+    matches_a = json.loads(req.content)
+
+    assert matches_a[-1]["id"] == matches_later[-1]["id"]

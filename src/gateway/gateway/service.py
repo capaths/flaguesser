@@ -62,11 +62,11 @@ class GatewayService:
 
     @cors_http("GET", "/match/all")
     def get_all_matches(self, request):
-        return self.match_rpc.get_all_matches()
+        return json.dumps(self.match_rpc.get_all_matches())
 
     @cors_http("GET", "/match/byplayer/<string:username>")
     def get_match_by_player(self, request, username):
-        return self.match_rpc.get_player_matches(username)
+        return json.dumps(self.match_rpc.get_player_matches(username))
 
     @cors_http("POST", "/ticket/save")
     def get_all_tickets(self, request):
@@ -306,6 +306,13 @@ class GatewayService:
         })
 
         self.match_rpc.end_match(username1, username2, score1, score2)
+        if score1 != score2:
+            winner = username1 if score1 > score2 else username2
+            loser = username1 if score1 < score2 else username2
+
+            self.player_rpc.update_elo(winner, 10)
+            self.player_rpc.update_elo(loser, -10)
+
         self.hub.unsubscribe(player1["socket_id"], match_channel)
         self.hub.unsubscribe(player2["socket_id"], match_channel)
 

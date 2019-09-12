@@ -22,10 +22,13 @@ after_failure:
 - docker-compose logs gateway
 after_success:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-- docker pull owasp/zap2docker-weekly
-- docker run --name owasp-gateway --link capaths/gamesgateway -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8000
-- docker run --name owasp-webapp --link capaths/gameswebapp -t owasp/zap2docker-weekly zap-full-scan.py -t http://localhost:8080
 - docker-compose push gateway webapp
+
+after_deployment:
+- docker pull owasp/zap2docker-weekly
+- docker run --name owasp-gateway --link capaths/gamesgateway -t owasp/zap2docker-weekly zap-full-scan.py -t flaguesser.herokuapp.com
+
+
 
 deploy:
   provider: script

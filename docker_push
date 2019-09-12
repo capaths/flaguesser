@@ -9,12 +9,12 @@ do
     DOCKER_TAG=${DOCKER_IMGS[$i]}
 
     echo "Pushing ${WORKER_NAME}"
-    echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser/${WORKER_NAME}
+    echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/${WORKER_NAME}/worker
     if [[ $? == 0 ]]; then
-        docker tag ${DOCKER_TAG} registry.heroku.com/flaguesser/${WORKER_NAME}
+        docker tag ${DOCKER_TAG} registry.heroku.com/${WORKER_NAME}/worker
 
         echo "Pushing ${WORKER_NAME}"
-        docker push registry.heroku.com/flaguesser/${WORKER_NAME}
+        docker push registry.heroku.com/${WORKER_NAME}/worker
 
         echo "Releasing ${WORKER_NAME}"
         heroku login

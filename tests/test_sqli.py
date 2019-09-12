@@ -1,7 +1,7 @@
 import requests
 
 
-SLQ_Injection = "Chile" + "'" + "); DROP TABLE *"
+SLQ_Injection = "Chile" + "'" + "); DROP TABLE *;"
 
 
 

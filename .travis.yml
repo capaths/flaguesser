@@ -25,6 +25,7 @@ script:
 - pytest tests/test.py
 - pytest tests/test_match.py
 - pytest tests/test_chat.py
+- pytest tests/test_sqli.py
 after_failure:
 - docker ps -a
 - docker-compose logs gateway
@@ -34,7 +35,7 @@ after_success:
 
 after_deploy:
 - docker pull owasp/zap2docker-weekly
-- docker run --name owasp-gateway -t owasp/zap2docker-weekly zap-full-scan.py -t http://flaguesser.herokuapp.com/ -j
+- docker run --name owasp-gateway -t owasp/zap2docker-weekly zap-full-scan.py -t http://flaguesser.herokuapp.com/ -ja
 
 
 

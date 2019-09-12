@@ -22,10 +22,18 @@ do
     fi
 done
 
+echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser-gateway/web
+
+if [[ $? == 0 ]]; then
+    docker tag capaths/gamesgateway registry.heroku.com/flaguesser-gateway/web
+    docker push registry.heroku.com/flaguesser-gateway/web
+    heroku container:release web -a flaguesser-gateway
+fi
+
 echo "${HEROKU_API_KEY}" | docker login -u "_" --password-stdin registry.heroku.com/flaguesser/web
 
 if [[ $? == 0 ]]; then
-    docker tag capaths/gamesgateway registry.heroku.com/flaguesser/web
+    docker tag capaths/gameswebapp registry.heroku.com/flaguesser/web
     docker push registry.heroku.com/flaguesser/web
     heroku container:release web -a flaguesser
 fi

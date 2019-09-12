@@ -18,7 +18,7 @@ do
 
         echo "Releasing ${WORKER_NAME}"
         heroku login
-        heroku container:release ${WORKER_NAME} -a ${WORKER_NAME}
+        heroku container:release worker -a ${WORKER_NAME}
     fi
 done
 

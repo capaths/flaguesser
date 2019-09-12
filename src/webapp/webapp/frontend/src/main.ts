@@ -10,7 +10,7 @@ import {store} from './_store';
 Vue.config.productionTip = false;
 Vue.use(Vuex);
 
-const GATEWAY_URI = process.env.GATEWAY_URI || 'localhost:8000';
+const GATEWAY_URI = process.env.NODE_ENV === 'production' ? 'flaguesser-gateway.herokuapp.com' : 'localhost:8000';
 
 Vue.use(VueNativeSock, `ws://${GATEWAY_URI}/ws`, {
     format: 'json',

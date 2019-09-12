@@ -164,7 +164,10 @@ services:
   webapp:
     container_name: games-webapp
     image: capaths/gameswebapp
-    build: ./src/webapp
+    build:
+      context: ./src/webapp
+      cache_from:
+        - capaths/gameswebapp
     restart: always
     depends_on:
       - gateway

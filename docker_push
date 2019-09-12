@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-WORKERS=( "flaguesser-access" "flaguesser-chat" "flaguesser-match" "flaguesser-player" )
-DOCKER_IMGS=( "capaths/gamesaccess" "capaths/gameschat" "capaths/gamesmatch" "161905/gamesplayer" )
+WORKERS=( "flaguesser-access" "flaguesser-chat" "flaguesser-match" "flaguesser-player" "flaguesser-ticket")
+DOCKER_IMGS=( "capaths/gamesaccess" "capaths/gameschat" "capaths/gamesmatch" "161905/gamesplayer" "161905/gamesticket")
 
 for i in "${!WORKERS[@]}"
 do

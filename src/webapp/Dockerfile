@@ -12,4 +12,4 @@ COPY webapp/frontend/ ./
 
 RUN npm run build
 
-CMD ["http-server", "-p$PORT", "dist"]
+CMD ["http-server", "-p${PORT}", "dist"]
